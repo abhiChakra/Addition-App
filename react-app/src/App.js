@@ -3,7 +3,7 @@ import React from 'react';
 class AdditionApp extends React.Component {
 /*
   Component renders our main frontend and fetches http requests to our flask 
-  server. Requests are proxied to backend api using Nginx.
+  server. Requests are reverse proxied to backend api using Nginx.
 */
   constructor(props){
     super(props);
@@ -11,8 +11,7 @@ class AdditionApp extends React.Component {
       firstNumber : 0, 
       secondNumber: 0,
       answer: 0,
-      show_historical_data: false,
-      historical_data: null
+      historical_data: null,
     }
   }
 
@@ -24,8 +23,13 @@ class AdditionApp extends React.Component {
     this.setState({secondNumber: event.target.value})
   }
 
-  insertCalculation(event, operands){
-
+  insertCalculation(event, calculation){
+  /*
+    Making a POST request via a fetch call to Flask API with numbers of a
+    calculation we want to insert into DB. Making fetch call to web server
+    IP with /api/insert_nums which will be reverse proxied via Nginx to the
+    Application (Flask) server.
+  */
     event.preventDefault();
 
     fetch('http://localhost:8080/api/insert_nums', {method: 'POST',
@@ -33,7 +37,7 @@ class AdditionApp extends React.Component {
                                                     headers: {
                                                     'Content-Type' : 'application/json'
                                                     },
-                                                    body: JSON.stringify(operands)}
+                                                    body: JSON.stringify(calculation)}
      ).then((response) => {
        if(response.status === 200){
          response.json().then(
@@ -51,64 +55,49 @@ class AdditionApp extends React.Component {
 
   onCalculateValues(event){
     event.preventDefault();
-    let operands = {firstNum: this.state.firstNumber, secondNum: this.state.secondNumber}
+    let operands = {firstNum: this.state.firstNumber, secondNum: this.state.secondNumber, answer: null}
 
-    fetch('http://localhost:8080/api/calculate', {method: 'POST',
-                                             mode: 'cors',
-                                             headers: {
-                                              'Content-Type' : 'application/json'
-                                              },
-                                             body: JSON.stringify(operands)
-                                            }
-        ).then((response) => {
-          if(response.status === 200){
-            response.json().then((ans) => {
-              this.setState({answer: ans.answer})
-            })
+    let calculationAnswer = parseInt(operands.firstNum) + parseInt(operands.secondNum)
 
-            this.insertCalculation(event, operands)
+    this.setState({answer: calculationAnswer})
 
-          } else{
-            response.json().then((ans) => {
-              this.setState({answer: ans.error})
-            })
-          }
-        }).catch((error) => {
-          console.log("Error in fetching answer.", error)
-        })
+    operands.answer = calculationAnswer
+
+    this.insertCalculation(event, operands)
   }
 
   showHistory(event){
     event.preventDefault()
 
+    this.setState({historical_data: "loading data"})
+    
     this.getHistory(event)
-
-    this.setState({show_historical_data: true})
   }
 
   closeHistory(event){
     event.preventDefault()
 
-    this.setState({show_historical_data: false, historical_data: null})
+    this.setState({historical_data: null})
   }
 
   getHistory(event){
+    /*
+        Making a GET request via a fetch call to Flask API to retrieve calculations history.
+    */
 
     event.preventDefault()
 
-    fetch('http://localhost:8080/api/data', {method: 'POST',
+    fetch('http://localhost:8080/api/data', {method: 'GET',
                                              mode: 'cors'
                                           }
     ).then(response => {
       if(response.status === 200){
         (response.json()).then((data) => {
-          console.log(data)
           this.setState({historical_data: data['calculations']})
         })
       } else{
         (response.json()).then((data) => {
           this.setState({answer: data['error']})
-          this.setState({show_historical_data: false})
           return null
         })
       }
@@ -137,7 +126,8 @@ class AdditionApp extends React.Component {
           <Answer answerNumber={this.state.answer}/>
         </div>
         <div>
-          <ShowHistory history={this.state.show_historical_data} 
+          <ShowHistory
+          data={this.state.historical_data}
           closeHistory={(event)=> this.closeHistory(event)}
           showHistory={(event) => this.showHistory(event)}
           getHistory = {(event) => this.getHistory(event)}/>
@@ -175,7 +165,7 @@ function Answer(props){
 }
 
 function ShowHistory(props){
-  if(props.history){
+  if(props.data !== null){
     return(
       <button onClick={props.closeHistory}>Close history</button>
     )
@@ -187,19 +177,20 @@ function ShowHistory(props){
 }
 
 function History(props){
-  if(props.data !== null){
-//    data = props.getHistory()
-//    console.log(data)
-//    operands = data["calculations"]
+  if(props.data !== null && props.data !== "loading data"){
     return props.data.map((nums) => {
         let operands = nums[0].toString() + ' + ' + nums[1].toString() + ' = ' + nums[2].toString()
         return(
             <div>{operands}</div>
         )
     })
-  } else{
+  } else if(props.data === "loading data"){
     return(
-      <div>"History of calculations"</div>
+      <div>loading history...</div>
+    )
+  }else{
+    return(
+      <div>History of calculations</div>
     )
   }
 }

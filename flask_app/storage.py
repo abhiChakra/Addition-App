@@ -3,6 +3,12 @@ from sqlalchemy import create_engine, exc
 import os
 
 def read_config():
+    '''
+        Instantiating a config file reader for our use case.
+        To be used to read credentials for connecting to PSQL
+        DB hosted in GCP SQL.
+    :return: ConfigParser
+    '''
 
     current_dir = os.path.dirname(__file__)
     file_path = os.path.join(current_dir, '../config.ini')
@@ -12,7 +18,12 @@ def read_config():
 
     return config
 
-def connection_uri(db_tag_name="history_database"):
+def connection_uri():
+    '''
+        Creating connection URI for connecting to PSQL DB. URI will
+        be used to create SQLAlchemy engine for executing queries.
+        :return: URI for our PSQL DB hosted in GCP SQL
+    '''
     config = read_config()
 
     URI = 'postgresql+psycopg2://{}:{}@/{}?host={}'.format(
@@ -25,6 +36,12 @@ def connection_uri(db_tag_name="history_database"):
     return URI
 
 def create_history_table():
+    '''
+        Function used to create an SQL table for inserting our
+        calculations into. We are using SQLAlchemy's DB engine
+        for executing our created query.
+    :return:
+    '''
 
     URI = connection_uri()
     my_connection = None
@@ -53,6 +70,13 @@ def create_history_table():
         engine.dispose()
 
 def insert_calculation(firstNum, secondNum, answer):
+    '''
+    Function used to insert our calculation into the DB.
+    :param firstNum: first operand of calculation
+    :param secondNum: second operand of calculation
+    :param answer: calculation answer
+    :return: error or success strings for inserting into DB.
+    '''
     URI = connection_uri()
     my_connection = None
 
@@ -71,6 +95,10 @@ def insert_calculation(firstNum, secondNum, answer):
         engine.dispose()
 
 def get_calculations():
+    '''
+    Function used to fetch calculations history from PSQL DB.
+    :return: hashmap with DB calculations values
+    '''
 
     URI = connection_uri()
     my_connection = None
@@ -103,6 +131,12 @@ def get_calculations():
 
 
 def delete_calculation(firstNum, secondNum):
+    '''
+    Function used to delete calculations from calculations DB, based on operands.
+    :param firstNum: first operand
+    :param secondNum: second operand
+    :return: string message on whether deleted successfully or not
+    '''
 
     URI = connection_uri()
     my_connection = None
@@ -119,14 +153,5 @@ def delete_calculation(firstNum, secondNum):
         my_connection.close()
         engine.dispose()
 
-if __name__ == "__main__":
-    #print(get_calculations())
-    #print(delete_calculation(1000, 1000))
-    # print(insert_calculation(2, 2, 4))
-    # print(insert_calculation(10, 10, 20))
-    # print(insert_calculation(15, 15, 30))
-    print(get_calculations())
-
-    
-
-    
+if __name__=="__main__":
+    delete_calculation(12345, 12345)

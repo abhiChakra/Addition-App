@@ -7,27 +7,14 @@ app = Flask(__name__)
 def index():
     return "My Addition App", 200
 
-@app.route('/calculate', methods=['POST'])
-def calculate():
-    '''
-        This http endpoint recieves the data (specifically operands) from our
-        frontend react webserver proxied to it and returns either the answer or
-        in the case that the operands are not numbers, returns an error message. 
-    '''
-    nums = request.get_json()
-    firstNum = nums['firstNum']
-    secondNum = nums['secondNum']
-
-    try:
-        firstNum, secondNum = int(firstNum), int(secondNum)
-        answer = firstNum + secondNum
-        return jsonify({'answer':answer}), 200
-
-    except ValueError:
-        return jsonify({'error': 'Must enter valid integers'}), 404
-
-@app.route('/data', methods=['POST'])
+@app.route('/data', methods=['GET'])
 def data():
+    '''
+        Function used to get calculations history
+        from Postgres database and return to fetch call in frontend.
+    :return: Json format of either collected calculations or error message
+    '''
+
     calculations_history = []
 
     try:
@@ -41,11 +28,14 @@ def data():
 
 @app.route('/insert_nums', methods=['POST'])
 def insert_nums():
+    '''
+        Function used to insert a calculation into our postgres
+        DB. Operands of operation received from frontend.
+    :return: Json format of either success or failure response.
+    '''
 
     insert_nums = request.get_json()
-    firstNum, secondNum = insert_nums['firstNum'], insert_nums['secondNum']
-
-    answer = int(firstNum) + int(secondNum)
+    firstNum, secondNum, answer = insert_nums['firstNum'], insert_nums['secondNum'], insert_nums['answer']
 
     try:
         insert_calculation(firstNum, secondNum, answer)
