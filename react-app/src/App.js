@@ -57,13 +57,17 @@ class AdditionApp extends React.Component {
     event.preventDefault();
     let operands = {firstNum: this.state.firstNumber, secondNum: this.state.secondNumber, answer: null}
 
-    let calculationAnswer = parseInt(operands.firstNum) + parseInt(operands.secondNum)
+    if(isNaN(parseInt(operands.firstNum)) || isNaN(parseInt(operands.secondNum))){
+      this.setState({answer: "Must enter valid number"})
+    } else{
+      let calculationAnswer = parseInt(operands.firstNum) + parseInt(operands.secondNum)
 
-    this.setState({answer: calculationAnswer})
+      this.setState({answer: calculationAnswer})
 
-    operands.answer = calculationAnswer
+      operands.answer = calculationAnswer
 
-    this.insertCalculation(event, operands)
+      this.insertCalculation(event, operands)
+    }
   }
 
   showHistory(event){

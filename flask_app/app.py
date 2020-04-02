@@ -24,7 +24,7 @@ def data():
     
         return jsonify({'calculations': calculations_history}), 200
     except:
-        return jsonify({'error': 'error fetching calculations history'}), 404
+        return jsonify({'error': 'error fetching calculations history'}), 500
 
 @app.route('/insert_nums', methods=['POST'])
 def insert_nums():
@@ -41,7 +41,7 @@ def insert_nums():
         insert_calculation(firstNum, secondNum, answer)
         return jsonify({'Response': 'Successfully inserted into DB'}), 200
     except:
-        return jsonify({'Response': 'Unable to insert into DB'}), 404
+        return jsonify({'Response': 'Unable to insert into DB'}), 500
 
 
 
