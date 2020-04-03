@@ -1,13 +1,20 @@
+# indicating which version of Docker-compose we wish to use
 version: "3.7"
 
+# we will be creating these services
 services:
   flask:
-    build: .
+    # Note that we are building from our current terminal directory where our Dockerfile is located, we use .
+    build: . 
+    # naming our resulting container
     container_name: flask
+    # publishing a port so that external services requesting port 8000 on your local machine
+    # are mapped to port 8000 on our container
     ports:
       - "8000:8000"
 
   nginx: 
+    # Since our Dockerfile for web-server is located in react-app foler, our build context is ./react-app
     build: ./react-app
     container_name: nginx
     ports:
