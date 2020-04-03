@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  flask:
+    build: .
+    container_name: flask
+    ports:
+      - "8000:8000"
+
+  nginx: 
+    build: ./react-app
+    container_name: nginx
+    ports:
+      - "8080:8080"
