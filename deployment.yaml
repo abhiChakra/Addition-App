@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+spec:
+  type: LoadBalancer
+  selector:
+    app: react
+    tier: ui
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: flask
+spec:
+  type: ClusterIP
+  selector:
+    component: flask
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: flask
+  template:
+    metadata:
+      labels:
+        component: flask
+    spec:
+      containers:
+        - name: flask
+          image: gcr.io/addition-app/addition-app-flask:latest
+          imagePullPolicy: "Always"
+          resources:
+            limits:
+              cpu: "1000m"
+            requests:
+              cpu: "400m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          ports:
+            - containerPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react
+      tier: ui
+  template:
+    metadata:
+      labels:
+        app: react
+        tier: ui
+    spec:
+      containers:
+        - name: ui
+          image: gcr.io/addition-app/addition-app-nginx:latest
+          imagePullPolicy: "Always"
+          resources:
+            limits:
+              cpu: "1000m"
+            requests:
+              cpu: "400m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          ports:
+            - containerPort: 8080

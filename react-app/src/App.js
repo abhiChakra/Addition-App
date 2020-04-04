@@ -32,7 +32,7 @@ class AdditionApp extends React.Component {
   */
     event.preventDefault();
 
-    fetch('http://localhost:8080/api/insert_nums', {method: 'POST',
+    fetch('http://34.66.13.114:8080/api/insert_nums', {method: 'POST',
                                                     mode: 'cors',
                                                     headers: {
                                                     'Content-Type' : 'application/json'
@@ -91,7 +91,7 @@ class AdditionApp extends React.Component {
 
     event.preventDefault()
 
-    fetch('http://localhost:8080/api/data', {method: 'GET',
+    fetch('http://34.66.13.114:8080/api/data', {method: 'GET',
                                              mode: 'cors'
                                           }
     ).then(response => {
